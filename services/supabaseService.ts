@@ -9,7 +9,6 @@ export interface SupabasePracticeData {
   avg_offset_ms: number;
 }
 
-// Credenciais atualizadas com os dados fornecidos pelo usuário
 const SUPABASE_URL = "https://ctvdlamxicoxniyqcpfd.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0dmRsYW14aWNveG5peXFjcGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0MjQ0MDksImV4cCI6MjA1NjAwMDQwOX0.H00Y_vwQQBVmWrdIBdSb-IklfMfe7bzxdAESh7J0ouc";
 
@@ -21,7 +20,6 @@ export class SupabaseService {
     const filePath = `${fileName}`;
 
     try {
-      // 1. Upload do Arquivo para o Storage Bucket
       const { data: storageData, error: storageError } = await this.supabase
         .storage
         .from('cajon-recordings')
@@ -32,13 +30,11 @@ export class SupabaseService {
 
       if (storageError) throw storageError;
 
-      // 2. Obter URL pública
       const { data: { publicUrl } } = this.supabase
         .storage
         .from('cajon-recordings')
         .getPublicUrl(filePath);
 
-      // 3. Salvar metadados na Tabela
       const { error: dbError } = await this.supabase
         .from('practice_sessions')
         .insert([{
@@ -56,14 +52,32 @@ export class SupabaseService {
       return { success: true, url: publicUrl };
     } catch (error) {
       console.error("[Supabase Error]", error);
-      // Retornamos falso mas não quebramos o app para o histórico local continuar funcionando
       return { success: false, error };
     }
   }
 
-  /**
-   * Busca as últimas sessões globais
-   */
+  async getRhythms() {
+    const { data, error } = await this.supabase
+      .from('course_rhythms')
+      .select('*')
+      .order('created_at', { ascending: true });
+    
+    if (error) {
+      console.error("Erro ao buscar ritmos:", error);
+      return null;
+    }
+    return data;
+  }
+
+  getReferenceAudioUrl(path: string) {
+    if (!path) return null;
+    const { data } = this.supabase
+      .storage
+      .from('assets-curso')
+      .getPublicUrl(path);
+    return data.publicUrl;
+  }
+
   async getGlobalHistory() {
     const { data, error } = await this.supabase
       .from('practice_sessions')

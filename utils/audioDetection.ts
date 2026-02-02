@@ -5,7 +5,7 @@ export interface Onset {
   time: number;
   energy: number;
   spectralCentroid: number;
-  type: 'B' | 'T' | '?';
+  type: 'B' | 'S' | '?';
 }
 
 export class AudioDetector {
@@ -24,7 +24,7 @@ export class AudioDetector {
     this.analyzer = Meyda.createMeydaAnalyzer({
       audioContext: this.audioContext,
       source: this.sourceNode,
-      bufferSize: 512,
+      bufferSize: 1024,
       featureExtractors: ['rms', 'spectralCentroid'],
       callback: (features: any) => this.detectOnset(features)
     });
@@ -44,24 +44,20 @@ export class AudioDetector {
   }
 
   private detectOnset(features: any) {
-    if (!this.isAnalyzing) return;
+    if (!this.isAnalyzing || !features) return;
 
     const currentTime = this.audioContext.currentTime - this.startTime;
     const rms = features.rms;
     const centroid = features.spectralCentroid;
     
-    // Sensibilidade ajustada para Cajón
-    const threshold = 0.12;
+    const threshold = 0.08;
     
     if (rms > threshold) {
       const lastOnset = this.onsets[this.onsets.length - 1];
       
-      // Debouncing rítmico (80ms para permitir semicolcheias rápidas)
-      if (!lastOnset || currentTime - lastOnset.time > 0.08) {
-        // Classificação baseada no centroide espectral
-        // Bass (B): Frequências baixas (< 1800Hz)
-        // Tone (T): Frequências altas (> 1800Hz)
-        const type: 'B' | 'T' = centroid < 1800 ? 'B' : 'T';
+      if (!lastOnset || currentTime - lastOnset.time > 0.07) {
+        // B = Bass, S = Slap
+        const type: 'B' | 'S' = centroid < 1600 ? 'B' : 'S';
 
         this.onsets.push({
           time: currentTime,

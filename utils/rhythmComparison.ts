@@ -43,10 +43,11 @@ export class RhythmComparison {
     const timestamps: { time: number; type: string; index: number }[] = [];
     this.expectedRhythm.forEach((note, index) => {
       if (note !== '·') {
-        // Cada slot no array é uma colcheia (1/2 tempo)
+        // Normaliza T para S caso venha do DB com formato antigo
+        const type = note === 'T' ? 'S' : note;
         timestamps.push({
           time: index * (this.beatDuration / 2),
-          type: note,
+          type: type,
           index: index
         });
       }
@@ -56,7 +57,7 @@ export class RhythmComparison {
 
   compareWithRecording(detectedOnsets: any[]): ComparisonResult {
     const expected = this.getExpectedTimestamps();
-    const tolerance = 0.12; // 120ms de tolerância máxima
+    const tolerance = 0.12; 
     
     let correctHits = 0;
     let correctTypes = 0;
@@ -68,7 +69,9 @@ export class RhythmComparison {
       
       if (closest) {
         const timeDiff = Math.abs(closest.time - expectedHit.time);
-        const typeMatch = closest.type === expectedHit.type;
+        // Garante que o tipo detectado seja comparado corretamente (S ou B)
+        const actualType = closest.type === 'T' ? 'S' : closest.type;
+        const typeMatch = actualType === expectedHit.type;
         
         if (timeDiff <= tolerance) {
           correctHits++;
@@ -86,7 +89,7 @@ export class RhythmComparison {
           diff: timeDiff,
           beat: expectedHit.index,
           expectedType: expectedHit.type,
-          actualType: closest.type,
+          actualType: actualType,
           typeMatch
         });
       }
@@ -128,7 +131,7 @@ export class RhythmComparison {
       intervals.push(onsets[i].time - onsets[i - 1].time);
     }
     const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-    const actualBPM = 60 / (avgInterval * 2); // Multiplicado por 2 pois o grid é de colcheias
+    const actualBPM = 60 / (avgInterval * 2); 
     const bpmDiff = actualBPM - this.bpm;
     return { actualBPM: Math.round(actualBPM), expectedBPM: this.bpm, bpmDiff: Math.round(bpmDiff), trend: 'consistent', consistent: Math.abs(bpmDiff) < 8 };
   }

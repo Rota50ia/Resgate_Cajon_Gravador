@@ -1,6 +1,5 @@
 
 import { useState, useRef } from 'react';
-import * as Tone from 'tone';
 
 export const useAudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -11,58 +10,51 @@ export const useAudioRecorder = () => {
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
 
-  // Iniciar gravação
   const startRecording = async () => {
     try {
-      // Pedir permissão do microfone
+      // CONFIGURAÇÃO PRO AUDIO: Desativar filtros que matam a dinâmica do Cajón
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: false // Importante para não alterar os picos
+          echoCancellation: false, // CRÍTICO: Não cancelar eco (isso abafa o instrumento)
+          noiseSuppression: false,  // CRÍTICO: Não suprimir ruído (isso confunde o cajón com ruído)
+          autoGainControl: false,   // CRÍTICO: Não mexer no ganho automaticamente
+          channelCount: 1,
+          sampleRate: 48000
         } 
       });
 
-      // Criar MediaRecorder
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
+      // Preferência por formatos mais modernos e menos compressão
+      const options = { mimeType: 'audio/webm;codecs=opus' };
+      const mediaRecorder = new MediaRecorder(stream, options);
 
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
-      // Capturar chunks de áudio
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           chunksRef.current.push(event.data);
         }
       };
 
-      // Quando parar a gravação
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         setAudioBlob(blob);
-        
-        // Parar todas as tracks do stream
         stream.getTracks().forEach(track => track.stop());
       };
 
-      // Iniciar gravação
-      mediaRecorder.start(100); // captura a cada 100ms
+      mediaRecorder.start(200); // Maior intervalo para menos processamento em background
       setIsRecording(true);
 
-      // Timer
       timerRef.current = window.setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
 
     } catch (error) {
       console.error('Erro ao acessar microfone:', error);
-      alert('Precisamos de acesso ao microfone para gravar sua prática!');
+      alert('Acesso ao microfone necessário!');
     }
   };
 
-  // Parar gravação
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
@@ -74,7 +66,6 @@ export const useAudioRecorder = () => {
     }
   };
 
-  // Resetar
   const resetRecording = () => {
     setAudioBlob(null);
     setRecordingTime(0);
