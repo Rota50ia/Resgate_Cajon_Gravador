@@ -77,6 +77,15 @@ const App: React.FC = () => {
     setMode(AppMode.ANALYZING);
   };
 
+  const handleDeleteRecording = () => {
+    resetRecording();
+    setResults(null);
+    setAiFeedback("");
+    setCurrentAudioUrl(null);
+    setMode(AppMode.IDLE);
+    setIsGuidedFlow(false);
+  };
+
   const startGuidedPractice = async () => {
     setMode(AppMode.GUIDED_PRACTICE);
     setIsGuidedFlow(true);
@@ -131,9 +140,7 @@ const App: React.FC = () => {
       <header className="w-full flex flex-col md:flex-row justify-between items-center gap-10 mb-16 md:mb-24 relative z-20">
         <div className="flex items-center gap-6 md:gap-10 group cursor-default">
           <div className="shrink-0 relative">
-            {/* Sombra Sólida Estilo Adesivo (conforme imagem) */}
             <div className="absolute inset-0 bg-black translate-x-3 translate-y-3 rounded-[1.5rem] opacity-90 blur-[2px]" />
-            
             <div className="relative w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 flex items-center justify-center overflow-visible group-hover:translate-y-[-4px] transition-transform duration-500 ease-out">
               <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
                 <path d="M15 20 C 10 30, 5 50, 10 75 C 15 90, 35 95, 55 92 C 80 88, 95 75, 92 45 C 90 20, 75 10, 45 8 C 25 7, 18 12, 15 20" fill="#f97316" />
@@ -229,7 +236,13 @@ const App: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <AnalysisDashboard result={results} aiFeedback={aiFeedback} audioUrl={currentAudioUrl} syncStatus={syncStatus} />
+              <AnalysisDashboard 
+                result={results} 
+                aiFeedback={aiFeedback} 
+                audioUrl={currentAudioUrl} 
+                syncStatus={syncStatus} 
+                onDelete={handleDeleteRecording}
+              />
             </div>
           )}
 
