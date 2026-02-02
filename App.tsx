@@ -129,25 +129,18 @@ const App: React.FC = () => {
   return (
     <div className="max-w-[1600px] mx-auto min-h-screen flex flex-col p-4 sm:p-6 md:p-12 lg:p-16 selection:bg-orange-500/40">
       <header className="w-full flex flex-col md:flex-row justify-between items-center gap-10 mb-16 md:mb-24 relative z-20">
-        <div className="flex items-center gap-6 md:gap-10 group">
+        <div className="flex items-center gap-6 md:gap-10 group cursor-default">
           <div className="shrink-0 relative">
-            {/* Organic Shadow */}
-            <div className="absolute inset-0 bg-black/40 translate-x-2 translate-y-2 rounded-[2rem] blur-xl opacity-60" />
+            {/* Sombra Sólida Estilo Adesivo (conforme imagem) */}
+            <div className="absolute inset-0 bg-black translate-x-3 translate-y-3 rounded-[1.5rem] opacity-90 blur-[2px]" />
             
-            <div className="relative w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 flex items-center justify-center overflow-visible group-hover:scale-110 transition-transform duration-700 ease-out">
-              {/* SVG reconstructed from user image */}
-              <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
-                {/* Organic Background Shape */}
+            <div className="relative w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 flex items-center justify-center overflow-visible group-hover:translate-y-[-4px] transition-transform duration-500 ease-out">
+              <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
                 <path d="M15 20 C 10 30, 5 50, 10 75 C 15 90, 35 95, 55 92 C 80 88, 95 75, 92 45 C 90 20, 75 10, 45 8 C 25 7, 18 12, 15 20" fill="#f97316" />
-                {/* Cajon Illustration */}
                 <g fill="none" stroke="black" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
-                  {/* Front face */}
                   <rect x="32" y="38" width="28" height="36" />
-                  {/* Top face */}
                   <path d="M32 38 L46 28 H72 L58 38" />
-                  {/* Side face */}
                   <path d="M72 28 V64 L58 74" />
-                  {/* Sound hole */}
                   <circle cx="46" cy="56" r="7" />
                 </g>
               </svg>
@@ -155,14 +148,14 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex flex-col">
-            <h1 className="flex flex-col leading-[0.75] italic font-black tracking-tighter uppercase">
-              <span className="text-[20px] md:text-[41px] lg:text-[36px] text-white">RESGATE</span>
-              <div className="flex items-baseline gap-2 md:gap-4 mt-1">
-                <span className="text-[12px] md:text-[25px] lg:text-[22px] text-white">DO</span>
-                <span className="text-[43px] md:text-[91px] lg:text-[80px] text-orange-500 leading-none">CAJÓN</span>
+            <h1 className="flex flex-col leading-[0.85] italic font-black tracking-tighter uppercase">
+              <span className="text-[32px] md:text-[52px] lg:text-[58px] text-white drop-shadow-sm">RESGATE</span>
+              <div className="flex items-baseline gap-2 md:gap-3 -mt-1 md:-mt-2">
+                <span className="text-[18px] md:text-[30px] lg:text-[34px] text-white">DO</span>
+                <span className="text-[32px] md:text-[52px] lg:text-[58px] text-orange-500 drop-shadow-sm">CAJÓN</span>
               </div>
             </h1>
-            <p className="text-[7px] md:text-[11px] lg:text-[11px] text-slate-500 font-black tracking-[0.4em] md:tracking-[0.7em] uppercase mt-4 opacity-70">
+            <p className="text-[8px] md:text-[12px] lg:text-[13px] text-slate-500 font-black tracking-[0.4em] md:tracking-[0.6em] uppercase mt-4 opacity-60">
               PROFESSIONAL RHYTHM ANALYSIS • STUDIO V2
             </p>
           </div>
