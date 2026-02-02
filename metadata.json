@@ -1,0 +1,7 @@
+{
+  "name": "Resgate_Cajon_Gravador",
+  "description": "Advanced rhythm analysis and training platform. Monitor accuracy, detect transients, and receive AI-driven feedback on your timing.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
