@@ -58,10 +58,11 @@ const App: React.FC = () => {
 
   const handleStart = async () => {
     await Tone.start();
-    resetRecording();
+    resetRecording(); // Limpa blob anterior
     setResults(null);
     setAiFeedback("");
     setCurrentAudioUrl(null);
+    setSyncStatus('draft');
     setMode(AppMode.RECORDING);
     metronomeRef.current?.start();
     startRecording();
@@ -87,20 +88,28 @@ const App: React.FC = () => {
     setCurrentAudioUrl(localUrl);
 
     try {
+      // 1. Análise Técnica (Obrigatória)
       const analysis = await analyzeRecording(blob, activePattern.sequence, bpm);
       setResults(analysis);
       setMode(AppMode.RESULTS);
       
-      const feedback = await geminiService.getRhythmFeedback({
-        pattern: activePattern.name, 
-        accuracy: analysis.accuracy, 
-        actualBPM: analysis.tempoAnalysis.actualBPM, 
-        trend: analysis.tempoAnalysis.trend
-      });
-      setAiFeedback(feedback);
+      // 2. Feedback IA (Opcional - não quebra o fluxo se falhar)
+      try {
+        const feedback = await geminiService.getRhythmFeedback({
+          pattern: activePattern.name, 
+          accuracy: analysis.accuracy, 
+          actualBPM: analysis.tempoAnalysis.actualBPM, 
+          trend: analysis.tempoAnalysis.trend
+        });
+        setAiFeedback(feedback);
+      } catch (aiErr) {
+        console.warn("IA indisponível, mas análise técnica concluída.");
+        setAiFeedback("Análise concluída com sucesso! (Feedback da IA temporariamente indisponível)");
+      }
     } catch (err) {
-      console.error("Erro na análise:", err);
+      console.error("Erro crítico na análise de áudio:", err);
       setMode(AppMode.IDLE);
+      alert("Não foi possível analisar o áudio. Tente gravar novamente em um local mais silencioso.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -119,20 +128,27 @@ const App: React.FC = () => {
   const handleUploadToCloud = async () => {
     if (!audioBlob || !results) return;
     setSyncStatus('pending');
-    const res = await supabaseService.uploadSession(audioBlob, {
-      rhythm_name: activePattern.name,
-      accuracy: results.accuracy,
-      type_accuracy: results.typeAccuracy,
-      bpm: bpm,
-      avg_offset_ms: parseInt(results.avgTimingError)
-    });
     
-    if (res.success) {
-      setSyncStatus('synced');
-      const newHistory = savePracticeResult(results, activePattern.name, bpm);
-      setHistory(newHistory);
-    } else {
+    try {
+      const res = await supabaseService.uploadSession(audioBlob, {
+        rhythm_name: activePattern.name,
+        accuracy: results.accuracy,
+        type_accuracy: results.typeAccuracy,
+        bpm: bpm,
+        avg_offset_ms: parseInt(results.avgTimingError)
+      });
+      
+      if (res.success) {
+        setSyncStatus('synced');
+        const newHistory = savePracticeResult(results, activePattern.name, bpm);
+        setHistory(newHistory);
+      } else {
+        throw new Error("Falha no upload");
+      }
+    } catch (err) {
+      console.error("Erro no upload:", err);
       setSyncStatus('failed');
+      alert("Erro ao salvar no servidor. Verifique sua conexão.");
     }
   };
 
@@ -148,7 +164,6 @@ const App: React.FC = () => {
   return (
     <div className="max-w-[1200px] mx-auto min-h-screen flex flex-col p-4 md:p-8 space-y-6">
       
-      {/* HEADER */}
       <header className="flex justify-between items-center w-full mb-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden group">
@@ -220,7 +235,7 @@ const App: React.FC = () => {
             <div className="glass-panel p-6 rounded-3xl border-white/5">
               <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Módulos de Estudo</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                {patterns.map(p => (
+                {patterns.length > 0 ? patterns.map(p => (
                   <button 
                     key={p.id}
                     onClick={() => { setActivePattern(p); setBpm(p.bpm); setMode(AppMode.IDLE); }}
@@ -233,7 +248,9 @@ const App: React.FC = () => {
                     <p className={`font-black text-sm uppercase tracking-tight ${activePattern.id === p.id ? 'text-orange-500' : 'text-slate-200'}`}>{p.name}</p>
                     <p className="text-[9px] text-slate-600 font-bold mt-1 uppercase tracking-wider">{p.category || 'Básico'} • {p.bpm} BPM</p>
                   </button>
-                ))}
+                )) : (
+                  <p className="text-[9px] text-slate-600 uppercase">Carregando ritmos...</p>
+                )}
               </div>
             </div>
           </div>

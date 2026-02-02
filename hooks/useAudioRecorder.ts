@@ -12,20 +12,22 @@ export const useAudioRecorder = () => {
 
   const startRecording = async () => {
     try {
-      // CONFIGURAÇÃO PRO AUDIO: Desativar filtros que matam a dinâmica do Cajón
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          echoCancellation: false, // CRÍTICO: Não cancelar eco (isso abafa o instrumento)
-          noiseSuppression: false,  // CRÍTICO: Não suprimir ruído (isso confunde o cajón com ruído)
-          autoGainControl: false,   // CRÍTICO: Não mexer no ganho automaticamente
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
           channelCount: 1,
           sampleRate: 48000
         } 
       });
 
-      // Preferência por formatos mais modernos e menos compressão
-      const options = { mimeType: 'audio/webm;codecs=opus' };
-      const mediaRecorder = new MediaRecorder(stream, options);
+      // Verifica suporte a tipos de mime
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+        ? 'audio/webm;codecs=opus' 
+        : 'audio/webm';
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
 
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
@@ -37,12 +39,14 @@ export const useAudioRecorder = () => {
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        setAudioBlob(blob);
+        if (chunksRef.current.length > 0) {
+          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          setAudioBlob(blob);
+        }
         stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.start(200); // Maior intervalo para menos processamento em background
+      mediaRecorder.start(500); // Coleta dados a cada 500ms
       setIsRecording(true);
 
       timerRef.current = window.setInterval(() => {
@@ -51,7 +55,7 @@ export const useAudioRecorder = () => {
 
     } catch (error) {
       console.error('Erro ao acessar microfone:', error);
-      alert('Acesso ao microfone necessário!');
+      alert('Acesso ao microfone negado ou indisponível.');
     }
   };
 
