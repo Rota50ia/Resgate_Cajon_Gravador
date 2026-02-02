@@ -26,6 +26,7 @@ export interface ComparisonResult {
   tempoAnalysis: TempoAnalysis;
   avgTimingError: string;
   patternAnalysis: { index: number, status: 'correct' | 'wrong-type' | 'missed' | 'extra' }[];
+  waveform?: number[]; // Added to store downsampled amplitude data
 }
 
 export class RhythmComparison {
@@ -43,7 +44,6 @@ export class RhythmComparison {
     const timestamps: { time: number; type: string; index: number }[] = [];
     this.expectedRhythm.forEach((note, index) => {
       if (note !== '·') {
-        // Normaliza T para S caso venha do DB com formato antigo
         const type = note === 'T' ? 'S' : note;
         timestamps.push({
           time: index * (this.beatDuration / 2),
@@ -69,7 +69,6 @@ export class RhythmComparison {
       
       if (closest) {
         const timeDiff = Math.abs(closest.time - expectedHit.time);
-        // Garante que o tipo detectado seja comparado corretamente (S ou B)
         const actualType = closest.type === 'T' ? 'S' : closest.type;
         const typeMatch = actualType === expectedHit.type;
         
